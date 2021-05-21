@@ -124,6 +124,8 @@ class AccountMove(models.Model):
                 qr_data = base64.encodestring(json.dumps(
                     qr_dict, indent=None).encode('ascii')).decode('ascii')
                 rec.afip_qr_code = 'https://www.afip.gob.ar/fe/qr/?p=%s' % qr_data
+            else:
+                rec.afip_qr_code = False
 
     def get_related_invoices_data(self):
         """
@@ -378,6 +380,13 @@ class AccountMove(models.Model):
                     ws.AgregarOpcional(
                         opcional_id=2101,
                         valor=inv.invoice_partner_bank_id.acc_number)
+                    # agregamos tipo de transmision si esta definido
+                    transmission_type = self.env['ir.config_parameter'].sudo().get_param(
+                        'l10n_ar_afipws_fe.fce_transmission', '')
+                    if transmission_type:
+                        ws.AgregarOpcional(
+                            opcional_id=27,
+                            valor=transmission_type)
                 elif int(doc_afip_code) in [202, 203, 207, 208, 212, 213]:
                     valor = inv.afip_fce_es_anulacion and 'S' or 'N'
                     ws.AgregarOpcional(
